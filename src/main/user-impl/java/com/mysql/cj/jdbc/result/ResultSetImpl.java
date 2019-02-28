@@ -58,6 +58,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -125,7 +127,9 @@ import com.mysql.cj.util.LogUtils;
 import com.mysql.cj.util.StringUtils;
 
 public class ResultSetImpl extends NativeResultset implements ResultSetInternalMethods, WarningListener {
-
+    /** Mysql datetime format */
+    static DateTimeFormatter mysqlDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.nnnnnnnnn]");
+    
     /** Counter used to generate IDs for profiling. */
     static int resultCounter = 1;
 
@@ -1446,7 +1450,7 @@ public class ResultSetImpl extends NativeResultset implements ResultSetInternalM
             } else if (type.equals(OffsetDateTime.class)) {
                 try {
                     String odt = getString(columnIndex);
-                    return odt == null ? null : (T) OffsetDateTime.parse(odt);
+                    return odt == null ? null : (T) LocalDateTime.parse(odt, mysqlDateTimeFormatter).atZone(ZoneId.systemDefault()).toOffsetDateTime();
                 } catch (DateTimeParseException e) {
                     // Let it continue and try by object deserialization.
                 }
